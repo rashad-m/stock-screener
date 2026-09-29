@@ -27,6 +27,10 @@ PRICE_MIN_COVERAGE_BY_MARKET: dict[str, float] = {
 
 BOOTSTRAP_PRICE_MIN_COVERAGE_BY_MARKET: dict[str, float] = {
     **PRICE_MIN_COVERAGE_BY_MARKET,
+    # AU has listed symbols that may not have usable Yahoo price history
+    # during first-run bootstrap. Allow bootstrap at 80% while retaining
+    # the normal 90% AU coverage requirement for ongoing cache workflows.
+    "AU": 0.80,
     # HK has many listed-but-stale symbols, so its durable GitHub bundle
     # coverage currently sits just above 75% during first-run bootstrap.
     "HK": 0.75,
