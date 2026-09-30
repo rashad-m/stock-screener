@@ -41,6 +41,7 @@ from .bulk_data_fetcher import BulkDataFetcher
 from .finviz_parser import FinvizParser
 from .github_release_sync_service import GitHubReleaseSyncService
 from .market_calendar_service import MarketCalendarService
+from .au_instrument_exclusions import AU_EXCLUDED_INSTRUMENTS
 from .security_master_service import security_master_resolver
 from .technical_calculator_service import TechnicalCalculatorService
 from .yahoo_earnings_calendar import (
@@ -1859,6 +1860,36 @@ class ProviderSnapshotService:
                 )
             }
         lifecycle_event_source_revision = snapshot.get("source_revision")
+
+        if bundle_market == "AU" and AU_EXCLUDED_INSTRUMENTS:
+            filtered_universe_rows = []
+            excluded_count = 0
+
+            for row in universe_rows:
+                local_code = str(row.get("local_code") or "").strip().upper()
+
+                if not local_code:
+                    symbol = str(row.get("symbol") or "").strip().upper()
+                    local_code = symbol.removesuffix(".AX")
+
+                if local_code in AU_EXCLUDED_INSTRUMENTS:
+                    excluded_count += 1
+                    logger.info(
+                        "Excluding AU instrument %s from weekly universe import: %s",
+                        local_code,
+                        AU_EXCLUDED_INSTRUMENTS[local_code],
+                    )
+                    continue
+
+                filtered_universe_rows.append(row)
+
+            logger.info(
+                "AU weekly universe exclusion filter: excluded=%s retained=%s total=%s",
+                excluded_count,
+                len(filtered_universe_rows),
+                len(universe_rows),
+            )
+            universe_rows = filtered_universe_rows
 
         try:
             self._replace_snapshot_key_runs(db, snapshot_key=snapshot_key)

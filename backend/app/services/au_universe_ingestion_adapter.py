@@ -14,6 +14,8 @@ import hashlib
 import json
 import re
 from pathlib import Path
+
+from .au_instrument_exclusions import AU_EXCLUDED_INSTRUMENTS
 from typing import Any, Iterable, Mapping
 
 from ..domain.universe.ingestion import (
@@ -39,41 +41,6 @@ _APPROVED_AU_SOURCES: frozenset[str] = frozenset(
 )
 
 _AU_LOCAL_CODE_RE = re.compile(r"^[A-Z0-9]{2,6}$")
-
-
-_AU_EXCLUDED_INSTRUMENTS_PATH = (
-    Path(__file__).resolve().parents[2]
-    / "data"
-    / "au_excluded_instruments.csv"
-)
-
-
-def _load_au_excluded_instruments() -> dict[str, str]:
-    """Load explicitly excluded AU non-common securities."""
-
-    if not _AU_EXCLUDED_INSTRUMENTS_PATH.exists():
-        return {}
-
-    excluded: dict[str, str] = {}
-
-    with _AU_EXCLUDED_INSTRUMENTS_PATH.open(
-        "r",
-        encoding="utf-8",
-        newline="",
-    ) as handle:
-        reader = csv.DictReader(handle)
-
-        for row in reader:
-            local_code = str(row.get("local_code") or "").strip().upper()
-            reason = str(row.get("reason") or "").strip()
-
-            if local_code:
-                excluded[local_code] = reason or "Excluded AU instrument"
-
-    return excluded
-
-
-_AU_EXCLUDED_INSTRUMENTS = _load_au_excluded_instruments()
 
 
 AUCanonicalUniverseRow = CanonicalUniverseRow
