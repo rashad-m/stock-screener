@@ -1,0 +1,28 @@
+# Memory limits for running US + AU + IN together on the VPS (16 GB host).
+#
+# The limits in docker-compose.prod.yml are sized for a smaller install. With
+# three markets enabled on 2026-11-26, Redis held a 261 MB dataset under a
+# 256 MB limit and was OOM-killed on every start (116 restarts), which failed
+# the bootstrap with "Redis is loading the dataset in memory". The data-fetch
+# worker was OOM-killed at 512 MB and the general worker sat at 977 MB of 1 GB.
+services:
+  redis:
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+  celery-datafetch:
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+  celery-general:
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+  celery-marketjobs-us:
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
