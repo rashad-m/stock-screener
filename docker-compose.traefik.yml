@@ -1,0 +1,38 @@
+# =============================================================================
+# Docker Compose overlay: serve behind an existing Traefik (Dokploy)
+# =============================================================================
+# For hosts where Traefik already owns ports 80/443. The frontend publishes no
+# host port; it joins Traefik's network and is routed by Host(`$DOMAIN`).
+#
+# Usage:
+#   scripts/docker-compose-enabled-markets.sh --env-file .env.docker \
+#     -f docker-compose.yml -f docker-compose.prod.yml \
+#     -f docker-compose.release.yml -f docker-compose.traefik.yml \
+#     up -d --no-build
+#
+# Requires .env.docker to define DOMAIN, CORS_ORIGINS=https://$DOMAIN and
+# SERVER_AUTH_SECURE_COOKIE=true.
+# =============================================================================
+
+services:
+  frontend:
+    ports: !reset []
+    networks:
+      - default
+      - dokploy-network
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.stockscreen-web.entrypoints=web
+      - traefik.http.routers.stockscreen-web.rule=Host(`${DOMAIN:?set DOMAIN}`)
+      - traefik.http.routers.stockscreen-web.middlewares=redirect-to-https@file
+      - traefik.http.routers.stockscreen-web.service=stockscreen
+      - traefik.http.routers.stockscreen-websecure.entrypoints=websecure
+      - traefik.http.routers.stockscreen-websecure.rule=Host(`${DOMAIN:?set DOMAIN}`)
+      - traefik.http.routers.stockscreen-websecure.tls=true
+      - traefik.http.routers.stockscreen-websecure.service=stockscreen
+      - traefik.http.services.stockscreen.loadbalancer.server.port=80
+
+networks:
+  dokploy-network:
+    external: true
