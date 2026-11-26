@@ -248,6 +248,25 @@ def test_hk_bootstrap_price_policy_accepts_current_github_bundle_floor():
     assert report["eligible"] is True
 
 
+def test_au_bootstrap_price_policy_accepts_same_day_untraded_listing_gap():
+    db = _session()
+    symbols = [f"SYM{i}" for i in range(100)]
+    as_of = date(2026, 11, 26)
+    db.add_all([_price(symbol, as_of) for symbol in symbols[:74]])
+    db.commit()
+
+    report = evaluate_bootstrap_price_cache_coverage(
+        db,
+        market="AU",
+        symbols=symbols,
+        as_of_date=as_of,
+    )
+
+    assert report["threshold"] == 0.70
+    assert report["price_coverage_ratio"] == 0.74
+    assert report["eligible"] is True
+
+
 def test_bootstrap_cache_coverage_keeps_fundamentals_threshold_strict_for_partial_price_markets():
     db = _session()
     symbols = [f"SYM{i}" for i in range(20)]

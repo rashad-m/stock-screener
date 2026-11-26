@@ -30,6 +30,12 @@ BOOTSTRAP_PRICE_MIN_COVERAGE_BY_MARKET: dict[str, float] = {
     # HK has many listed-but-stale symbols, so its durable GitHub bundle
     # coverage currently sits just above 75% during first-run bootstrap.
     "HK": 0.75,
+    # Yahoo publishes the zero-volume bar for an ASX listing that did not trade
+    # only some hours after the close, and roughly a fifth of ASX listings do
+    # not trade on a given day. A bootstrap started after the close therefore
+    # sat at 74.1% on 2026-11-26 (1452/1959: 395 one session behind, 109 never
+    # priced) and timed out against the 90% floor.
+    "AU": 0.70,
 }
 
 
